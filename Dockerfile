@@ -1,16 +1,22 @@
 # Build stage
 FROM gradle:8.12.1-jdk17 AS build
+
+# Set working directory and copy files with correct permissions
 WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle . .
+
+# Build the fat JAR
 RUN gradle buildFatJar --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-jammy
+
+# Expose port
 EXPOSE 8080
+
+# Create app directory and copy JAR
 RUN mkdir /app
+COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/QuickNotes.jar
 
-# Copy the file while preserving its original name
-COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/
-
-# Shell form allows the * wildcard to expand at runtime
-ENTRYPOINT java -jar /app/*-all.jar
+# Entrypoint
+ENTRYPOINT ["java", "-jar", "/app/QuickNotes.jar"]

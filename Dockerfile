@@ -1,22 +1,29 @@
+# =========================
 # Build stage
-FROM gradle:8.12.1-jdk17 AS build
+# =========================
+FROM gradle:8.12.1-jdk21 AS build
 
-# Set working directory and copy files with correct permissions
 WORKDIR /home/gradle/src
+
+# Copy project with Gradle ownership
 COPY --chown=gradle:gradle . .
 
-# Build the fat JAR
-RUN gradle buildFatJar --no-daemon
+# Build the executable Shadow JAR
+RUN gradle shadowJar --no-daemon
 
+
+# =========================
 # Runtime stage
-FROM eclipse-temurin:17-jre-jammy
+# =========================
+FROM eclipse-temurin:21-jre-jammy
 
-# Expose port
+WORKDIR /app
+
+# Expose the port used by the Ktor application
 EXPOSE 8080
 
-# Create app directory and copy JAR
-RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/QuickNotes.jar
+# Copy the Shadow JAR produced by Gradle
+COPY --from=build /home/gradle/src/build/libs/quickernotes-server.jar /app/quickernotes-server.jar
 
-# Entrypoint
-ENTRYPOINT ["java", "-jar", "/app/QuickNotes.jar"]
+# Start the Ktor application
+ENTRYPOINT ["java", "-jar", "/app/quickernotes-server.jar"]

@@ -6,7 +6,7 @@ RUN gradle buildFatJar --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-jammy
-EXPOSE 8443
+EXPOSE 8080
 RUN mkdir /app
 
 # Copy the file while preserving its original name
